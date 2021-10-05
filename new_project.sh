@@ -10,6 +10,7 @@ OUTPUT_DIR="."
 PROJCT_NAME=""
 ENCODING="utf-8"
 LF_CODE="lf"
+GEN_DOXYFILE=true
 
 
 function main()
@@ -73,7 +74,9 @@ function main()
   makefile_configure
   gitignore_configure
   readme_configure
-  doxygen_configure
+  if "$GEN_DOXYFILE" ; then
+    doxygen_configure
+  fi
 
   cd $PROJ_DIR
   git init
@@ -162,12 +165,15 @@ function parse_args()
         fi
         shift
         ;;
+      --no-doxyfile )
+        GEN_DOXYFILE=false
+        ;;
       -h | --help )
         usage
         exit 0
         ;;
       * )
-        if [[ "$1" =~ ^-+ ]] || [ "$PROJCT_NAME" == "" ]; then
+        if [[ "$1" =~ ^-+ ]] || [ "$PROJCT_NAME" != "" ]; then
           echo -e "\033[31mError: project name error.\033[m"
           exit 1
         fi
@@ -381,6 +387,7 @@ function usage()
   echo -e "  --lf            use LineFeed type (default lf)"
   echo -e "                  support encoding list:"
   echo -e "                    lf cr crlf"
+  echo -e "  --no-doxyfile   un generate Doxyfile"
   echo -e "  -h, --help      show help"
 }
 
