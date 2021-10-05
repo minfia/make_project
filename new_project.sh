@@ -27,6 +27,18 @@ function main()
     exit 1
   fi
 
+  nkf --help &> /dev/null
+  if [ $? != 0 ]; then
+    echo -e "\033[31mError: Please install 'nkf'."
+    exit 1
+  fi
+
+  doxygen --help &> /dev/null
+  if [ $? != 0 ]; then
+    echo -e "\033[31mError: Please install doxygen."
+    exit 1
+  fi
+
 #  echo "select lauguage $LANGUAGE"
 #  echo "output dir = $OUTPUT_DIR"
 #  echo "project name = $PROJCT_NAME"
