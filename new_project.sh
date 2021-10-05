@@ -292,7 +292,7 @@ function make_main_file_c()
   echo -e " */\n\n" >> $MAIN_FILE
   echo -e "#include <stdio.h>\n\n" >> $MAIN_FILE
   echo -e "int main(int argc, char *argv[])\n{" >> $MAIN_FILE
-  echo    "    printf(\"Hello world.\\n\");" >> $MAIN_FILE
+  echo -e "    printf(\"Hello world.\\\n\");" >> $MAIN_FILE
   echo -e "    return 0;\n}" >> $MAIN_FILE
 }
 
