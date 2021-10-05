@@ -22,6 +22,11 @@ function main()
 
   parse_args $@
 
+  if [ "$PROJCT_NAME" == "" ]; then
+    echo -e "\033[31mError: Please input project name.\033[m"
+    exit 1
+  fi
+
 #  echo "select lauguage $LANGUAGE"
 #  echo "output dir = $OUTPUT_DIR"
 #  echo "project name = $PROJCT_NAME"
@@ -85,7 +90,7 @@ function parse_args()
             fi
           done
           if [[ "$LANGUAGE" == "" ]]; then
-            echo "specipy lauguage error."
+            echo -e "\033[31mError: specipy lauguage error.\033[m"
             exit 1
           fi
         fi
@@ -94,7 +99,7 @@ function parse_args()
         if [[ ! "$2" =~ ^-+ ]]; then
           # 引数あり
           if [[ "$2" == "" ]]; then
-            echo "specipy output directory error."
+            echo -e "\033[31mError: specipy output directory error.\033[m"
             exit 1
           fi
           OUTPUT_DIR=$2
@@ -113,7 +118,7 @@ function parse_args()
         if [[ ! "$2" =~ ^-+ ]]; then
           # 引数あり
           if [[ "$2" == "" ]]; then
-            echo "specipy encoding error."
+            echo -e "\033[31mError: specipy encoding error.\033[m"
             exit 1
           fi
           case $2 in
@@ -121,7 +126,7 @@ function parse_args()
               ENCODING=$2
               ;;
             * )
-              echo "select encoding is 'utf-8' or 'sjis'"
+              echo -e "\033[31mError: select encoding is 'utf-8' or 'sjis'.\033[m"
               exit 1
           esac
         fi
@@ -131,7 +136,7 @@ function parse_args()
         if [[ ! "$2" =~ ^-+ ]]; then
           # 引数あり
           if [[ "$2" == "" ]]; then
-            echo "specipy encoding error."
+            echo -e "\033[31mError: specipy LineFeed error.\033[m"
             exit 1
           fi
           case $2 in
@@ -139,7 +144,7 @@ function parse_args()
               LF_CODE=$2
               ;;
             * )
-              echo "select encoding is 'lf', 'cr' or 'crlf'"
+              echo -e "\033[31mError: select encoding is 'lf', 'cr' or 'crlf'.\033[m"
               exit 1
           esac
         fi
@@ -150,8 +155,8 @@ function parse_args()
         exit 0
         ;;
       * )
-        if [[ "$1" =~ ^-+ ]] && [[ "$1" != "-h" ]] && [[ "$1" != "--help" ]] || [ "$PROJCT_NAME" != "" ]; then
-          echo "project name error."
+        if [[ "$1" =~ ^-+ ]] || [ "$PROJCT_NAME" == "" ]; then
+          echo -e "\033[31mError: project name error.\033[m"
           exit 1
         fi
         PROJCT_NAME=$1
