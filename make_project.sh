@@ -5,7 +5,7 @@ PROGRAM=$(basename $0)
 
 SUPPORTED_LANG=("c" "python")
 
-LANGUAGE="c"
+LANGUAGE=${SUPPORTED_LANG[0]}
 OUTPUT_DIR="."
 PROJCT_NAME=""
 ENCODING="utf-8"
@@ -365,7 +365,7 @@ function usage()
   echo -e "Usage: $PROGRAM PROJECTNAME [Options]..."
   echo -e "This script is make new project."
   echo -e "Options:"
-  echo -e "  --lang          use language type (default c)"
+  echo -e "  --lang          use language type (default $LANGUAGE)"
   echo -e "                  support language list:"
 
   local LANG_LIST=""
@@ -381,10 +381,10 @@ function usage()
 
   echo -e "                    ${LANG_LIST}"
   echo -e "  -o, --output    project dir make destination (default current)"
-  echo -e "  -e, --encoding  use encoding type (default utf-8)"
+  echo -e "  -e, --encoding  use encoding type (default $ENCODING)"
   echo -e "                  support encoding list:"
   echo -e "                    utf-8 sjis"
-  echo -e "  --lf            use LineFeed type (default lf)"
+  echo -e "  --lf            use LineFeed type (default $LF_CODE)"
   echo -e "                  support encoding list:"
   echo -e "                    lf cr crlf"
   echo -e "  --no-doxyfile   un generate Doxyfile"
