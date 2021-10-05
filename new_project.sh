@@ -9,7 +9,7 @@ LANGUAGE="c"
 OUTPUT_DIR="."
 PROJCT_NAME=""
 ENCODING="utf-8"
-LF_CODE="LF"
+LF_CODE="lf"
 
 
 function main()
@@ -65,10 +65,6 @@ function main()
 
   echo ""
   echo "make project done."
-  if [ $ENCODING == "sjis" ]; then
-    echo "Please convert to Shift-JIS yourself."
-  fi
-
 }
 
 function parse_args()
@@ -76,7 +72,7 @@ function parse_args()
   while [ -n "$1" ]
   do
     case $1 in
-      -l | --language )
+      --lang )
         if [[ ! "$2" =~ ^-+ ]]; then
           # 引数あり
           LANGUAGE=""
@@ -126,6 +122,24 @@ function parse_args()
               ;;
             * )
               echo "select encoding is 'utf-8' or 'sjis'"
+              exit 1
+          esac
+        fi
+        shift
+        ;;
+      --lf )
+        if [[ ! "$2" =~ ^-+ ]]; then
+          # 引数あり
+          if [[ "$2" == "" ]]; then
+            echo "specipy encoding error."
+            exit 1
+          fi
+          case $2 in
+            lf | cr | crlf )
+              LF_CODE=$2
+              ;;
+            * )
+              echo "select encoding is 'lf', 'cr' or 'crlf'"
               exit 1
           esac
         fi
@@ -294,6 +308,22 @@ function make_main_file_c()
   echo -e "int main(int argc, char *argv[])\n{" >> $MAIN_FILE
   echo -e "    printf(\"Hello world.\\\n\");" >> $MAIN_FILE
   echo -e "    return 0;\n}" >> $MAIN_FILE
+
+  TENC=
+  TLF=
+  if [ $ENCODING == "sjis" ]; then
+    TENC="-s"
+  fi
+
+  if [ $LF_CODE == "cr" ]; then
+    TLF="m"
+  elif [ $LF_CODE == "crlf" ]; then
+    TLF="w"
+  fi
+
+  if [ "$TENC" != "" ] || [ "$TLF" != "" ]; then
+    nkf -L$TLF $TENC --overwrite $MAIN_FILE
+  fi
 }
 
 # Pythonプロジェクト設定
@@ -312,10 +342,7 @@ function usage()
   echo -e "Usage: $PROGRAM PROJECTNAME [Options]..."
   echo -e "This script is make new project."
   echo -e "Options:"
-  echo -e "  -e, --encoding  use encoding type (default utf-8)"
-  echo -e "                  support encoding list:"
-  echo -e "                    utf-8 sjis"
-  echo -e "  -l, --lauguage  use language type (default c)"
+  echo -e "  --lang          use language type (default c)"
   echo -e "                  support language list:"
 
   local LANG_LIST=""
@@ -331,6 +358,12 @@ function usage()
 
   echo -e "                    ${LANG_LIST}"
   echo -e "  -o, --output    project dir make destination (default current)"
+  echo -e "  -e, --encoding  use encoding type (default utf-8)"
+  echo -e "                  support encoding list:"
+  echo -e "                    utf-8 sjis"
+  echo -e "  --lf            use LineFeed type (default lf)"
+  echo -e "                  support encoding list:"
+  echo -e "                    lf cr crlf"
   echo -e "  -h, --help      show help"
 }
 
