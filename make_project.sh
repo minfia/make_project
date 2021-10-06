@@ -8,6 +8,7 @@ SUPPORTED_LANG=("c" "python")
 LANGUAGE=${SUPPORTED_LANG[0]}
 OUTPUT_DIR="."
 PROJCT_NAME=""
+FILE_NAME=""
 ENCODING="utf-8"
 LF_CODE="lf"
 GEN_DOXYFILE=true
@@ -23,8 +24,8 @@ function main()
 
   parse_args $@
 
-  if [ "$PROJCT_NAME" == "" ]; then
-    echo -e "\033[31mError: Please input project name.\033[m"
+  if [ "$PROJCT_NAME" == "" ] && [ "$FILE_NAME" == "" ]; then
+    echo -e "\033[31mError: Please input project name or file name.\033[m"
     exit 1
   fi
 
@@ -50,41 +51,64 @@ function main()
     exit 1
   fi
 
-  PROJ_DIR=$OUTPUT_DIR/$PROJCT_NAME
-  mkdir $PROJ_DIR
-  if [[ $? != 0 ]]; then
-    exit 1
+  if [ "$PROJCT_NAME" != "" ]; then
+    PROJ_DIR=$OUTPUT_DIR/$PROJCT_NAME
+    mkdir $PROJ_DIR
+    if [[ $? != 0 ]]; then
+      exit 1
+    fi
+
+    SRCDIR=$OUTPUT_DIR/$PROJCT_NAME/src
+    mkdir $SRCDIR
+    if [[ $? != 0 ]]; then
+      exit 1
+    fi
+
+    case $LANGUAGE in
+      c )
+        make_main_file_c
+        ;;
+      python )
+        make_main_file_python
+        ;;
+    esac
+
+    makefile_configure
+    gitignore_configure
+    readme_configure
+    if "$GEN_DOXYFILE" ; then
+      doxygen_configure
+    fi
+
+    cd $PROJ_DIR
+    git init
+    git add .
+    git commit -m "Initial commit"
+
+    echo ""
+    echo "create project done."
+  elif [ "$FILE_NAME" != "" ]; then
+
+    SRCDIR=$OUTPUT_DIR
+    if [ ! -e "$SRCDIR" ]; then
+      mkdir $SRCDIR
+      if [[ $? != 0 ]]; then
+        exit 1
+      fi
+    fi
+
+    case $LANGUAGE in
+      c )
+        make_new_file_c
+        ;;
+      python )
+        make_new_file_python
+        ;;
+    esac
+
+    echo ""
+    echo "create new file."
   fi
-
-  SRCDIR=$OUTPUT_DIR/$PROJCT_NAME/src
-  mkdir $SRCDIR
-  if [[ $? != 0 ]]; then
-    exit 1
-  fi
-
-  case $LANGUAGE in
-    c )
-      make_main_file_c
-      ;;
-    python )
-      make_main_file_python
-      ;;
-  esac
-
-  makefile_configure
-  gitignore_configure
-  readme_configure
-  if "$GEN_DOXYFILE" ; then
-    doxygen_configure
-  fi
-
-  cd $PROJ_DIR
-  git init
-  git add .
-  git commit -m "Initial commit"
-
-  echo ""
-  echo "make project done."
 }
 
 function parse_args()
@@ -172,12 +196,35 @@ function parse_args()
         usage
         exit 0
         ;;
-      * )
-        if [[ "$1" =~ ^-+ ]] || [ "$PROJCT_NAME" != "" ]; then
+      project )
+        if [[ "$2" =~ ^-+ ]] || [[ "$2" == "" ]]; then
           echo -e "\033[31mError: project name error.\033[m"
           exit 1
         fi
-        PROJCT_NAME=$1
+        if [ "$FILE_NAME" != "" ]; then
+          echo -e "\033[31mError: \"project\" cannot be used at the same time as file.\033[m"
+          exit 1
+        fi
+        PROJCT_NAME=$2
+        shift
+        ;;
+      file )
+        if [[ "$2" =~ ^-+ ]] || [[ "$2" == "" ]]; then
+            echo -e "\003[31mError: file name error.\003[m"
+            exit 1
+        fi
+        if [ "$PROJCT_NAME" != "" ]; then
+          echo -e "\033[31mError: \"file\" cannot be used at the same time as project.\033[m"
+          exit 1
+        fi
+        FILE_NAME=$2
+        shift
+        ;;
+      * )
+        if [[ "$1" =~ ^-+ ]] || [ "$PROJCT_NAME" != "" ]; then
+          echo -e "\033[31mError: error.\033[m"
+          exit 1
+        fi
     esac
     shift
   done
@@ -349,6 +396,36 @@ function make_main_file_c()
   fi
 }
 
+# C言語新規ファイル
+function make_new_file_c()
+{
+  local NEW_FILE_SRC="$SRCDIR/$FILE_NAME.c"
+  echo -e "/**\n * @file    $FILE_NAME.c\n * @brief   \n */\n\n" >> $NEW_FILE_SRC
+
+  local NEW_FILE_HEADER="$SRCDIR/$FILE_NAME.h"
+  local INCLUDE_GUARD="${FILE_NAME^^}_H_"
+  echo -e "/**\n * @file    $FILE_NAME.h\n * @brief   \n */\n\n" > $NEW_FILE_HEADER
+  echo -e "#ifndef $INCLUDE_GUARD" >> $NEW_FILE_HEADER
+  echo -e "#define $INCLUDE_GUARD\n\n" >> $NEW_FILE_HEADER
+  echo -e "#endif /* $INCLUDE_GUARD */" >> $NEW_FILE_HEADER
+
+  TENC=
+  TLF=
+  if [ $ENCODING == "sjis" ]; then
+    TENC="-s"
+  fi
+  if [ $LF_CODE == "cr" ]; then
+    TLF="m"
+  elif [ $LF_CODE == "crlf" ]; then
+    TLF="w"
+  fi
+
+  if [ "$TENC" != "" ] || [ "$TLF" != "" ]; then
+    nkf -L$TLF $TENC --overwrite $NEW_FILE_SRC
+    nkf -L$TLF $TENC --overwrite $NEW_FILE_HEADER
+  fi
+}
+
 # Pythonプロジェクト設定
 function make_main_file_python()
 {
@@ -360,10 +437,21 @@ function make_main_file_python()
   echo -e "    main()" >> $MAIN_FILE
 }
 
+# Python新規ファイル
+function make_new_file_python()
+{
+  local NEW_FILE="$SRCDIR/$FILE_NAME.py"
+  echo -e "##\n# @file    $FILE_NAME.py\n# @brief   \n\n" > $NEW_FILE
+
+  echo -e "def main():\n    pass\n" >> $NEW_FILE
+  echo -e "if __name__ == \"__main__\":\n    main()" >> $NEW_FILE
+}
+
 function usage()
 {
-  echo -e "Usage: $PROGRAM PROJECTNAME [Options]..."
-  echo -e "This script is make new project."
+  echo -e "Usage: $PROGRAM project PROJECTNAME [Options]..."
+  echo -e "       $PROGRAM file FILENAME [Options]..."
+  echo -e "This script is make new project and generate new file(s)."
   echo -e "Options:"
   echo -e "  --lang          use language type (default $LANGUAGE)"
   echo -e "                  support language list:"
@@ -388,6 +476,8 @@ function usage()
   echo -e "                  support encoding list:"
   echo -e "                    lf cr crlf"
   echo -e "  --no-doxyfile   un generate Doxyfile"
+  echo -e "  file            generate new file(s)"
+  echo -e "                  "
   echo -e "  -h, --help      show help"
 }
 
