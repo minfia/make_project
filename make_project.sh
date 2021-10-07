@@ -134,26 +134,7 @@ function parse_args()
           fi
         fi
         ;;
-      -o | --output )
-        if [[ ! "$2" =~ ^-+ ]]; then
-          # 引数あり
-          if [[ "$2" == "" ]]; then
-            echo -e "\033[31mError: specipy output directory error.\033[m"
-            exit 1
-          fi
-          OUTPUT_DIR=$2
-          while true
-          do
-            if [ "/" == "${OUTPUT_DIR: -1}" ]; then
-              OUTPUT_DIR=${OUTPUT_DIR/%?/}
-            else
-              break
-            fi
-          done
-          shift
-        fi
-        ;;
-      -e | --encoding )
+      --enc )
         if [[ ! "$2" =~ ^-+ ]]; then
           # 引数あり
           if [[ "$2" == "" ]]; then
@@ -188,6 +169,25 @@ function parse_args()
           esac
         fi
         shift
+        ;;
+      -o | --output )
+        if [[ ! "$2" =~ ^-+ ]]; then
+          # 引数あり
+          if [[ "$2" == "" ]]; then
+            echo -e "\033[31mError: specipy output directory error.\033[m"
+            exit 1
+          fi
+          OUTPUT_DIR=$2
+          while true
+          do
+            if [ "/" == "${OUTPUT_DIR: -1}" ]; then
+              OUTPUT_DIR=${OUTPUT_DIR/%?/}
+            else
+              break
+            fi
+          done
+          shift
+        fi
         ;;
       --no-doxyfile )
         GEN_DOXYFILE=false
@@ -468,15 +468,14 @@ function usage()
   done
 
   echo -e "                    ${LANG_LIST}"
-  echo -e "  -o, --output    project dir make destination (default current)"
-  echo -e "  -e, --encoding  use encoding type (default $ENCODING)"
+  echo -e "  --enc           use encoding type (default $ENCODING)"
   echo -e "                  support encoding list:"
   echo -e "                    utf-8 sjis"
   echo -e "  --lf            use LineFeed type (default $LF_CODE)"
   echo -e "                  support encoding list:"
   echo -e "                    lf cr crlf"
+  echo -e "  -o, --output    project dir make destination (default current)"
   echo -e "  --no-doxyfile   un generate Doxyfile"
-  echo -e "  file            generate new file(s)"
   echo -e "                  "
   echo -e "  -h, --help      show help"
 }
