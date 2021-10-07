@@ -234,9 +234,14 @@ function parse_args()
 function makefile_configure()
 {
   local MAKEFILE=$PROJ_DIR/Makefile
+  local DOXY_ARG=
+
+  if "$GEN_DOXYFILE" ; then
+    DOXY_ARG=" doxy doxy_clean"
+  fi
 
   echo -e "# プログラム名\nPROG := $PROJCT_NAME\n" > $MAKEFILE
-  echo -e ".PHONY: all clean run doxy doxy_clean\n" >> $MAKEFILE
+  echo -e ".PHONY: all clean run$DOXY_ARG\n" >> $MAKEFILE
   echo -e "# ディレクトリ\nSRCDIR := ./src\nOBJDIR := ./obj\nOUTDIR := ./bin\n" >> $MAKEFILE
   echo -e "# ツール設定" >> $MAKEFILE
 
@@ -278,8 +283,10 @@ function makefile_configure()
       ;;
   esac
 
-  echo -e "# Doc生成\ndoxy :\n\tdoxygen\n" >> $MAKEFILE
-  echo -e "# Doc削除\ndoxy_clean:\n\t@rm -rf docs\n" >> $MAKEFILE
+  if "$GEN_DOXYFILE" ; then
+    echo -e "# Doc生成\ndoxy :\n\tdoxygen\n" >> $MAKEFILE
+    echo -e "# Doc削除\ndoxy_clean:\n\t@rm -rf docs\n" >> $MAKEFILE
+  fi
 }
 
 # DoxygenFileの設定
