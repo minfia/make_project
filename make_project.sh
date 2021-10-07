@@ -253,9 +253,9 @@ function makefile_configure()
       echo -e "OBJS := \$(subst \$(SRCDIR),\$(OBJDIR),\$(SRCS:%.c=%.o))" >> $MAKEFILE
       echo -e "DEPS := \$(OBJS:%.o=%.d)\n" >> $MAKEFILE
       echo -e "# ビルド設定\nBUILD = debug" >> $MAKEFILE
-      echo -e "ifeq (\$(BUILD), release)\nCFLAGS += -Os" >> $MAKEFILE
-      echo -e "else ifeq (\$(BUILD), debug)\nCFLAGS += -O0 -g" >> $MAKEFILE
-      echo -e "else\n\$(error BUILD=release or debug)\nendif\n" >> $MAKEFILE
+      echo -e "ifeq (\$(BUILD), release)\n\tCFLAGS += -Os" >> $MAKEFILE
+      echo -e "else ifeq (\$(BUILD), debug)\n\tCFLAGS += -O0 -g" >> $MAKEFILE
+      echo -e "else\n\t\$(error BUILD=release or debug)\nendif\n" >> $MAKEFILE
       echo -e "all : \$(PROG)\n" >> $MAKEFILE
       echo -e "\$(PROG) : \$(patsubst %, %, \$(OBJS))\n\t@mkdir -p \$(OUTDIR)\n\t\$(CC) \$(CFLAGS) -o \$(OUTDIR)/\$@ \$^\n" >> $MAKEFILE
       echo -e "\$(OBJDIR)/%.o : \$(SRCDIR)/%.c\n\t@mkdir -p \$(dir \$(OBJS))\n\t\$(CC) \$(CFLAGS) -c -MMD -MP -o \$@ \$<\n" >> $MAKEFILE
@@ -269,13 +269,13 @@ function makefile_configure()
       echo -e "PYTHONL := python3\nPYINSTL := pyinstaller\nPIFLAGS := --onefile --clean\n" >> $MAKEFILE
       echo -e "# ファイル\nSRCS := main.py\n" >> $MAKEFILE
       echo -e "# ビルド設定\nBUILD = release\n" >> $MAKEFILE
-      echo -e "ifeq (\$(BUILD), release)\nPIFLAGS += " >> $MAKEFILE
-      echo -e "else ifeq (\$(BUILD), debug)\nPIFLAGS += --debug all" >> $MAKEFILE
-      echo -e "else\n\$(error BUILD=release or debug)\nendif\n" >> $MAKEFILE
+      echo -e "ifeq (\$(BUILD), release)\n\tPIFLAGS += " >> $MAKEFILE
+      echo -e "else ifeq (\$(BUILD), debug)\n\tPIFLAGS += --debug all" >> $MAKEFILE
+      echo -e "else\n\t\$(error BUILD=release or debug)\nendif\n" >> $MAKEFILE
       echo -e "# 実行OS\nOS = linux" >> $MAKEFILE
-      echo -e "ifeq (\$(OS), win)\nPYTHON = \$(PYTHONW)\nPYINST = \$(PYINSTW)" >> $MAKEFILE
-      echo -e "else ifeq (\$(OS), linux)\nPYTHON = \$(PYTHONL)\nPYINST = \$(PYINSTL)" >> $MAKEFILE
-      echo -e "else\n\$(error OS=win or linux)\nendif\n" >> $MAKEFILE
+      echo -e "ifeq (\$(OS), win)\n\tPYTHON = \$(PYTHONW)\n\tPYINST = \$(PYINSTW)" >> $MAKEFILE
+      echo -e "else ifeq (\$(OS), linux)\n\tPYTHON = \$(PYTHONL)\n\tPYINST = \$(PYINSTL)" >> $MAKEFILE
+      echo -e "else\n\t\$(error OS=win or linux)\nendif\n" >> $MAKEFILE
       echo -e "all : \$(PROG)\n" >> $MAKEFILE
       echo -e "\$(PROG) :\n\t\$(PYINST) \$(PIFLAGS) --workpath \$(OBJDIR) --distpath \$(OUTDIR) \$(SRCDIR)/\$(SRCS)\n\t@rename 's/main*/\$@/' \$(OUTDIR)/*\n" >> $MAKEFILE
       echo -e "run :\n\t@\$(PYTHON) \$(SRCDIR)/\$(SRCS)\n" >> $MAKEFILE
