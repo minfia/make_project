@@ -317,8 +317,9 @@ function doxygen_configure()
     sed -i -e "s/^\(EXTRACT_$ITEM \+= \)NO/\1YES/" $DOXYFILE
   done
 
-  # ソースコード文字コード設定
+  # ソースコード設定
   sed -i -e "s/^\(INPUT \+=\)/\1 .\/src\//" $DOXYFILE
+  sed -i -e "s/^\(RECURSIVE \+= \)NO/\1YES/" $DOXYFILE
   if [ $ENCODING == "sjis" ]; then
     sed -i -e "s/^\(INPUT_ENCODING \+= \)UTF-8/\1CP932/" $DOXYFILE
   fi
