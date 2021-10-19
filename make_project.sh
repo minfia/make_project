@@ -3,7 +3,7 @@
 
 PROGRAM=$(basename $0)
 
-SUPPORTED_LANG=("c" "python")
+SUPPORTED_LANG=("c" "cpp" "python")
 
 LANGUAGE=${SUPPORTED_LANG[0]}
 OUTPUT_DIR="."
@@ -68,6 +68,9 @@ function main()
       c )
         make_main_file_c
         ;;
+      cpp )
+        make_main_file_cpp
+        ;;
       python )
         make_main_file_python
         ;;
@@ -100,6 +103,9 @@ function main()
     case $LANGUAGE in
       c )
         make_new_file_c
+        ;;
+      cpp )
+        make_new_file_cpp
         ;;
       python )
         make_new_file_python
@@ -246,19 +252,32 @@ function makefile_configure()
   echo -e "# ツール設定" >> $MAKEFILE
 
   case $LANGUAGE in
-    c )
-      echo -e "CC := gcc\nCFLAGS := -Wall -Wextra\n" >> $MAKEFILE
+    c | cpp)
+      local CMP=
+      local CMP_FLG=
+      local EXTENTION=
+      if [ "$LANGUAGE" == "c" ]; then
+        CMP="CC"
+        CMP_FLG="CFLAGS"
+        EXTENTION="c"
+        echo -e "${CMP} := gcc\n${CMP_FLG} := -Wall -Wextra\n" >> $MAKEFILE
+      elif [ "$LANGUAGE" == "cpp" ]; then
+        CMP="CXX"
+        CMP_FLG="CXXFLAGS"
+        EXTENTION="cpp"
+        echo -e "${CMP} := g++\n${CMP_FLG} := -Wall -Wextra\n" >> $MAKEFILE
+      fi
       echo -e "# ファイル" >> $MAKEFILE
-      echo -e "SRCS := \$(shell find \$(SRCDIR) -type f -name *.c)" >> $MAKEFILE
-      echo -e "OBJS := \$(subst \$(SRCDIR),\$(OBJDIR),\$(SRCS:%.c=%.o))" >> $MAKEFILE
+      echo -e "SRCS := \$(shell find \$(SRCDIR) -type f -name *.${EXTENTION})" >> $MAKEFILE
+      echo -e "OBJS := \$(subst \$(SRCDIR),\$(OBJDIR),\$(SRCS:%.${EXTENTION}=%.o))" >> $MAKEFILE
       echo -e "DEPS := \$(OBJS:%.o=%.d)\n" >> $MAKEFILE
       echo -e "# ビルド設定\nBUILD = debug" >> $MAKEFILE
-      echo -e "ifeq (\$(BUILD), release)\n\tCFLAGS += -Os" >> $MAKEFILE
-      echo -e "else ifeq (\$(BUILD), debug)\n\tCFLAGS += -O0 -g" >> $MAKEFILE
+      echo -e "ifeq (\$(BUILD), release)\n\t${CMP_FLG} += -Os" >> $MAKEFILE
+      echo -e "else ifeq (\$(BUILD), debug)\n\t${CMP_FLG} += -O0 -g" >> $MAKEFILE
       echo -e "else\n\t\$(error BUILD=release or debug)\nendif\n" >> $MAKEFILE
       echo -e "all : \$(PROG)\n" >> $MAKEFILE
-      echo -e "\$(PROG) : \$(patsubst %, %, \$(OBJS))\n\t@mkdir -p \$(OUTDIR)\n\t\$(CC) \$(CFLAGS) -o \$(OUTDIR)/\$@ \$^\n" >> $MAKEFILE
-      echo -e "\$(OBJDIR)/%.o : \$(SRCDIR)/%.c\n\t@mkdir -p \$(dir \$(OBJS))\n\t\$(CC) \$(CFLAGS) -c -MMD -MP -o \$@ \$<\n" >> $MAKEFILE
+      echo -e "\$(PROG) : \$(patsubst %, %, \$(OBJS))\n\t@mkdir -p \$(OUTDIR)\n\t\$(${CMP}) \$(${CMP_FLG}) -o \$(OUTDIR)/\$@ \$^\n" >> $MAKEFILE
+      echo -e "\$(OBJDIR)/%.o : \$(SRCDIR)/%.${EXTENTION}\n\t@mkdir -p \$(dir \$(OBJS))\n\t\$(${CMP}) \$(${CMP_FLG}) -c -MMD -MP -o \$@ \$<\n" >> $MAKEFILE
       echo -e "run :\n\t@\$(OUTDIR)/\$(PROG)\n" >> $MAKEFILE
       echo -e "clean :\n\t@rm -rf \$(OUTDIR) \$(OBJDIR)\n" >> $MAKEFILE
       echo -e "-include \$(DEPS)\n" >> $MAKEFILE
@@ -325,7 +344,7 @@ function doxygen_configure()
   fi
 
   # ドキュメント化除外設定
-  if [ $LANGUAGE == "c" ]; then
+  if [ $LANGUAGE == "c" ] || [ $LANGUAGE == "cpp" ]; then
     sed -i -e "s/^\(EXCLUDE_PATTERNS \+=\)/\1 \*\/lib\/\*/" $DOXYFILE
   fi
 
@@ -363,7 +382,7 @@ function gitignore_configure()
   echo -e "obj/" >> $GITIGNORE
 
   case $LANGUAGE in
-    c )
+    c | cpp)
       echo -e "G*" >> $GITIGNORE
       echo -e "html/" >> $GITIGNORE
       ;;
@@ -387,8 +406,8 @@ function make_main_file_c()
   echo -e "    printf(\"Hello world.\\\n\");" >> $MAIN_FILE
   echo -e "    return 0;\n}" >> $MAIN_FILE
 
-  TENC=
-  TLF=
+  local TENC=
+  local TLF=
   if [ $ENCODING == "sjis" ]; then
     TENC="-s"
   fi
@@ -408,7 +427,8 @@ function make_main_file_c()
 function make_new_file_c()
 {
   local NEW_FILE_SRC="$SRCDIR/$FILE_NAME.c"
-  echo -e "/**\n * @file    $FILE_NAME.c\n * @brief   \n */\n\n" >> $NEW_FILE_SRC
+  echo -e "/**\n * @file    $FILE_NAME.c\n * @brief   \n */\n\n" > $NEW_FILE_SRC
+  echo -e "#include \"$FILE_NAME.h\"\n\n" >> $NEW_FILE_SRC
 
   local NEW_FILE_HEADER="$SRCDIR/$FILE_NAME.h"
   local INCLUDE_GUARD="${FILE_NAME^^}_H_"
@@ -417,8 +437,68 @@ function make_new_file_c()
   echo -e "#define $INCLUDE_GUARD\n\n" >> $NEW_FILE_HEADER
   echo -e "#endif /* $INCLUDE_GUARD */" >> $NEW_FILE_HEADER
 
-  TENC=
-  TLF=
+  local TENC=
+  local TLF=
+  if [ $ENCODING == "sjis" ]; then
+    TENC="-s"
+  fi
+  if [ $LF_CODE == "cr" ]; then
+    TLF="m"
+  elif [ $LF_CODE == "crlf" ]; then
+    TLF="w"
+  fi
+
+  if [ "$TENC" != "" ] || [ "$TLF" != "" ]; then
+    nkf -L$TLF $TENC --overwrite $NEW_FILE_SRC
+    nkf -L$TLF $TENC --overwrite $NEW_FILE_HEADER
+  fi
+}
+
+# C++プロジェクト設定
+function make_main_file_cpp()
+{
+  local MAIN_FILE=$SRCDIR/main.cpp
+  echo -e "/**" > $MAIN_FILE
+  echo -e " * @file    main.cpp" >> $MAIN_FILE
+  echo -e " * @brief   メインファイル" >> $MAIN_FILE
+  echo -e "*/\n\n" >> $MAIN_FILE
+  echo -e "#include <iostream>\n\n" >> $MAIN_FILE
+  echo -e "int main(int argc, char *argv[])\n{" >> $MAIN_FILE
+  echo -e "    std::cout << \"Hello world.\\\n\";" >> $MAIN_FILE
+  echo -e "    return 0;\n}" >> $MAIN_FILE
+
+  local TENC=
+  local TLF=
+  if [ $ENCODING == "sjis" ]; then
+    TENC="-s"
+  fi
+  if [ $LF_CODE == "cr" ];then
+    TLF="m"
+  elif [ $LF_CODE == "crlf" ]; then
+    TLF="w"
+  fi
+
+  if [ "$TENC" != "" ] || [ "$TLF" != "" ]; then
+    nkf -L$TLF $TENC --overwrite $MAIN_FILE
+  fi
+}
+
+# C++新規ファイル
+function make_new_file_cpp()
+{
+  local NEW_FILE_SRC="$SRCDIR/$FILE_NAME.cpp"
+  echo -e "/**\n * @file    $FILE_NAME.cpp\n * @brief   \n */\n\n" > $NEW_FILE_SRC
+  echo -e "#include \"$FILE_NAME.hpp\"\n\n" >> $NEW_FILE_SRC
+
+  local NEW_FILE_HEADER="$SRCDIR/$FILE_NAME.hpp"
+  local INCLUDE_GUARD="${FILE_NAME^^}_HPP_"
+  echo -e "/**\n * @file    $FILE_NAME.hpp\n * @brief   \n */\n\n" > $NEW_FILE_HEADER
+  echo -e "#ifndef $INCLUDE_GUARD" >> $NEW_FILE_HEADER
+  echo -e "#define $INCLUDE_GUARD\n\n" >> $NEW_FILE_HEADER
+  echo -e "#endif /* $INCLUDE_GUARD */" >> $NEW_FILE_HEADER
+
+  local TENC=
+  local TLF=
   if [ $ENCODING == "sjis" ]; then
     TENC="-s"
   fi
