@@ -202,7 +202,7 @@ function parse_args()
         usage
         exit 0
         ;;
-      project )
+      proj )
         if [[ "$2" =~ ^-+ ]] || [[ "$2" == "" ]]; then
           echo -e "\033[31mError: project name error.\033[m"
           exit 1
@@ -265,7 +265,7 @@ function makefile_configure()
         CMP="CXX"
         CMP_FLG="CXXFLAGS"
         EXTENTION="cpp"
-        echo -e "${CMP} := g++\n${CMP_FLG} := -Wall -Wextra\n" >> $MAKEFILE
+        echo -e "${CMP} := g++\n${CMP_FLG} := -Wall -Wextra -std=c++17\n" >> $MAKEFILE
       fi
       echo -e "# ファイル" >> $MAKEFILE
       echo -e "SRCS := \$(shell find \$(SRCDIR) -type f -name *.${EXTENTION})" >> $MAKEFILE
@@ -537,7 +537,7 @@ function make_new_file_python()
 
 function usage()
 {
-  echo -e "Usage: $PROGRAM project PROJECTNAME [Options]..."
+  echo -e "Usage: $PROGRAM proj PROJECTNAME [Options]..."
   echo -e "       $PROGRAM file FILENAME [Options]..."
   echo -e "This script is make new project and generate new file(s)."
   echo -e "Options:"
