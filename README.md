@@ -6,13 +6,14 @@
 
 ## 対応言語
 * C言語
+* C++
 * Python
 
 
 ## 使い方
 
 ### 新規プロジェクト生成
-`$ ./make_project.sh project new_project`  
+`$ ./make_project.sh proj new_project`  
 デフォルト設定
 * カレントディレクトリに`new_project`ディレクトリを生成  
 * 言語は`C言語`  
@@ -40,3 +41,6 @@
 * -h, --help  
    ヘルプを表示
 
+## おまけ
+以下のようにエイリアスを設定するとコマンドのように使用できる  
+`alias new_project='<make_projectディレクトリまでのPath>/make_project.sh'`
