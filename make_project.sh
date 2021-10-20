@@ -276,7 +276,7 @@ function makefile_configure()
       echo -e "else ifeq (\$(BUILD), debug)\n\t${CMP_FLG} += -O0 -g" >> $MAKEFILE
       echo -e "else\n\t\$(error BUILD=release or debug)\nendif\n" >> $MAKEFILE
       echo -e "all : \$(PROG)\n" >> $MAKEFILE
-      echo -e "\$(PROG) : \$(patsubst %, %, \$(OBJS))\n\t@mkdir -p \$(OUTDIR)\n\t\$(${CMP}) \$(${CMP_FLG}) -o \$(OUTDIR)/\$@ \$^\n" >> $MAKEFILE
+      echo -e "\$(PROG) : \$(patsubst %,%,\$(OBJS))\n\t@mkdir -p \$(OUTDIR)\n\t\$(${CMP}) \$(${CMP_FLG}) -o \$(OUTDIR)/\$@ \$^\n" >> $MAKEFILE
       echo -e "\$(OBJDIR)/%.o : \$(SRCDIR)/%.${EXTENTION}\n\t@mkdir -p \$(dir \$(OBJS))\n\t\$(${CMP}) \$(${CMP_FLG}) -c -MMD -MP -o \$@ \$<\n" >> $MAKEFILE
       echo -e "run :\n\t@\$(OUTDIR)/\$(PROG)\n" >> $MAKEFILE
       echo -e "clean :\n\t@rm -rf \$(OUTDIR) \$(OBJDIR)\n" >> $MAKEFILE
@@ -488,13 +488,23 @@ function make_new_file_cpp()
 {
   local NEW_FILE_SRC="$SRCDIR/$FILE_NAME.cpp"
   echo -e "/**\n * @file    $FILE_NAME.cpp\n * @brief   \n */\n\n" > $NEW_FILE_SRC
-  echo -e "#include \"$FILE_NAME.hpp\"\n\n" >> $NEW_FILE_SRC
+  echo -e "#include \"$FILE_NAME.hpp\"" >> $NEW_FILE_SRC
+  echo -e "#include <iostream>\n\n" >> $NEW_FILE_SRC
+  echo -e "$FILE_NAME::$FILE_NAME()\n{\n}\n" >> $NEW_FILE_SRC
+  echo -e "$FILE_NAME::~$FILE_NAME()\n{\n}\n" >> $NEW_FILE_SRC
+  echo -e "void $FILE_NAME::HelloWorld()\n{" >> $NEW_FILE_SRC
+  echo -e "    std::cout << \"HelloWorld from class.\";\n}" >> $NEW_FILE_SRC
 
   local NEW_FILE_HEADER="$SRCDIR/$FILE_NAME.hpp"
   local INCLUDE_GUARD="${FILE_NAME^^}_HPP_"
   echo -e "/**\n * @file    $FILE_NAME.hpp\n * @brief   \n */\n\n" > $NEW_FILE_HEADER
   echo -e "#ifndef $INCLUDE_GUARD" >> $NEW_FILE_HEADER
   echo -e "#define $INCLUDE_GUARD\n\n" >> $NEW_FILE_HEADER
+  echo -e "class $FILE_NAME\n{" >> $NEW_FILE_HEADER
+  echo -e "    private:\n    public:" >> $NEW_FILE_HEADER
+  echo -e "        $FILE_NAME();\n        ~$FILE_NAME();" >> $NEW_FILE_HEADER
+  echo -e "        void HelloWorld();" >> $NEW_FILE_HEADER
+  echo -e "};\n\n" >> $NEW_FILE_HEADER
   echo -e "#endif /* $INCLUDE_GUARD */" >> $NEW_FILE_HEADER
 
   local TENC=
