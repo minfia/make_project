@@ -87,6 +87,8 @@ function main()
     git init
     git add .
     git commit -m "Initial commit"
+    git branch develop
+    git checkout develop
 
     echo ""
     echo "create project done."
